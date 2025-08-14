@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radio + LocalStorage Example</title>
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    color: #333;
+    padding: 10px;
+  }
+
+  h2 {
+    margin-bottom: 10px;
+    font-size: 20px;
+  }
+
+  label {
+    margin-right: 15px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  input[type="text"],
+  input[type="number"] {
+    padding: 10px;
+    margin: 5px;
+    border: none;
+    border-radius: 8px;
+    background: #f0f0f0;
+    font-size: 14px;
+    outline: none;
+  }
+
+  button {
+    background: #ff007f;
+    border: none;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+  }
+
+  button:hover {
+    opacity: 0.8;
+  }
+
+  .box {
+    padding: 15px;
+    border-radius: 12px;
+    background: #f0f0f0;
+    margin: 10px 0;
+    position: relative;
+  }
+
+  .box h3 {
+    margin: 0 0 5px 0;
+    font-size: 18px;
+  }
+
+  .cancel-btn {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    background: none;
+    border: none;
+    color: #ff007f;
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  .name {
+    text-align: center;
+  }
+
+  .choice {
+    text-align: center;
+  }
+
+  .account,
+  .accountResult {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .accountResult {
+    border-top: 2px solid #fff;
+  }
+
+  .inner-inputs {
+    background: #fff;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    margin-top: 8px;
+  }
+
+  .inner-inputs input {
+    width: calc(50% - 10px);
+  }
+
+  #main {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  .inner-add-btn {
+    margin-right: 5px;
+  }
+
+  #addBtn {
+    height: 35px;
+  }
+
+  .btnClick {
+    animation: btnAnimation 0.5s;
+  }
+
+  @keyframes btnAnimation {
+    0% {
+        opacity: 0%;
+        transform: scale(0.9);
+    } 100% {
+        opacity: 100%;
+        transform: scale(1);
+    }
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.01);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+  }
+
+  .redGlass {
+    background: rgba(255, 0, 127, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+  }
+
+  .typing-indicator {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 20px;
+    }
+
+    .typing-indicator span {
+      display: block;
+      width: 8px;
+      height: 8px;
+      background-color: #ff007f;
+      border-radius: 50%;
+      animation: bounce 1s infinite ease-in-out;
+    }
+
+    .typing-indicator span:nth-child(1) {
+      animation-delay: 0s;
+    }
+    .typing-indicator span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .typing-indicator span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+      0%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-8px);
+      }
+    }
+
+</style>
+</head>
+<body>
+
+    <main class="glass" style="position: fixed; padding: 10px; bottom: 0; left: 0; z-index: 10; width: 100%; display: flex; justify-content: center; align-items: center; border-top: 2px dotted #ff007f;">
+        <div style="display: flex;">
+            <label style="display: flex; justify-content: center; align-items: center;"><input type="radio" name="choice" value="বাকি"> বাকি</label>
+            <label style="display: flex; justify-content: center; align-items: center;"><input type="radio" name="choice" value="ধার"> ধার</label>
+            <label style="display: flex; justify-content: center; align-items: center;"><input type="radio" name="choice" value="প্রতিদিনের হিসাব"> প্রতিদিনের হিসাব</label>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
+            <input class="redGlass" style="background: rgba(255, 0, 127, 0.1); width: 90px; border: 2px dotted #ff007f;" type="text" id="name" placeholder="Name/Date">
+            <button style="height: 40px; width: 115px;" id="addBtn">Add</button>
+        </div>
+    </main>
+
+    <div style="height: 40px;"></div>
+
+    <div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 80vh;" id="main"></div>
+
+    <div style="height: 90px;"></div>
+
+    <div class="glass" style="width: 100%; padding: 10px; position: fixed; z-index: 10; top:0; right: 0; display: flex; justify-content: center; align-items: center; border-bottom: 2px dotted #ff007f;">
+        <div class="redGlass" style="display: flex; gap:2px; padding: 10px; border-radius: 10px; width: 80%; border: 2px dotted #ff007f;">
+            <ion-icon style="color:#ff007f" name="search"></ion-icon>
+            <input id="qoute" style="background: transparent; margin: 0; padding: 0; width: 100%;" type="text" placeholder="Search...">
+        </div>
+    </div>
+
+<script>
+    document.body.addEventListener('click', (e) => {
+    if (e.target.tagName === 'BUTTON') {
+        e.target.classList.add('btnClick');
+        void e.target.offsetHeight; // reflow trick
+        e.target.addEventListener('animationend', () => {
+            e.target.classList.remove('btnClick');
+        }, { once: true });
+        }
+    });
+
+
+const main = document.getElementById('main');
+const addBtn = document.getElementById('addBtn');
+
+document.getElementById('qoute').addEventListener('input', function () {
+  loadData(this.value);
+});
+
+
+function loadData(searchText = '') {
+  let list = JSON.parse(localStorage.getItem('accounts')) || [];
+  main.innerHTML = `
+    <p>No accounts added</p>
+    <div class="typing-indicator">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+  `;
+
+  if (!list) {
+    return;
+  }
+  list.forEach((account, index) => {
+    if (searchText && !account.name.toLowerCase().includes(searchText.toLowerCase())) {
+      return; // এই আইটেম ম্যাচ না করলে স্কিপ করো
+    }
+
+    let box = document.createElement('div');
+    box.classList.add('box');
+
+    box.innerHTML = `
+      <h3 class="name">${account.name}</h3>
+      <p class="choice">${account.choice}</p>
+      <div>
+        ${(account.innerList || []).map(item => `
+        <div class="account">
+            <p class="des">${item.innerDes}</p>
+            <p class="tk">${item.innerTk} টাকা</p>
+        </div>
+        `).join('')}
+      </div>
+      <div class="accountResult">
+        <p class="des">মোট</p>
+        <div style="display:flex; gap:4px; align-items:center;">
+            <p class="motTk">${account.motTk}</p>
+            <p class="tk"> টাকা</p>
+        </div>
+      </div>
+      <div class="inner-inputs">
+        <input type="text" class="inner-des" placeholder="Description/Date">
+        <input type="number" class="inner-tk" placeholder="Amount">
+        <button class="inner-add-btn">+</button>
+        <button class="inner-sub-btn">-</button>
+      </div>
+      <button class="cancel-btn" onclick="deleteItem(${index})">✖</button>
+    `;
+    main.innerHTML = '';
+
+    main.appendChild(box);
+
+    // ভিতরের Add বোতামের কাজ
+    box.querySelector('.inner-add-btn').addEventListener('click', () => {
+    let innerDes = box.querySelector('.inner-des').value;
+    let innerTk = box.querySelector('.inner-tk').value;
+
+    if (!innerDes || !innerTk) {
+        alert("Description ও Amount দিন");
+        return;
+    }
+
+    // create inner item
+    let innerItem = {
+        id: generateUniqueId(),
+        innerDes: innerDes,
+        innerTk: '+' + innerTk
+    };
+
+    // push to the correct account
+    list[index].innerList.push(innerItem);
+
+    // update total
+    list[index].motTk += parseFloat(innerTk);
+
+    // save to localStorage
+    localStorage.setItem('accounts', JSON.stringify(list));
+
+    // clear input fields
+    box.querySelector('.inner-des').value = '';
+    box.querySelector('.inner-tk').value = '';
+
+    // reload
+    loadData();
+    });
+
+    box.querySelector('.inner-sub-btn').addEventListener('click', () => {
+    let innerDes = box.querySelector('.inner-des').value;
+    let innerTk = box.querySelector('.inner-tk').value;
+
+    if (!innerDes || !innerTk) {
+        alert("Description ও Amount দিন");
+        return;
+    }
+
+    // create inner item
+    let innerItem = {
+        id: generateUniqueId(),
+        innerDes: innerDes,
+        innerTk: '-' + innerTk
+    };
+
+    // push to the correct account
+    list[index].innerList.push(innerItem);
+
+    // update total
+    list[index].motTk -= parseFloat(innerTk);
+
+    // save to localStorage
+    localStorage.setItem('accounts', JSON.stringify(list));
+
+    // clear input fields
+    box.querySelector('.inner-des').value = '';
+    box.querySelector('.inner-tk').value = '';
+
+    // reload
+    loadData();
+    });
+  });
+}
+
+const generateUniqueId = (length = 8) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
+
+function deleteItem(index) {
+    if (confirm('আপনি কি এই আইটেমটি মুছে ফেলতে চান?')) {
+        let list = JSON.parse(localStorage.getItem('accounts')) || [];
+        list.splice(index, 1);
+        localStorage.setItem('accounts', JSON.stringify(list));
+        loadData();
+    }
+}
+
+addBtn.addEventListener('click', () => {
+  const name = document.getElementById('name').value;
+  const selectedRadio = document.querySelector('input[name="choice"]:checked');
+
+  if (!name || !selectedRadio) {
+    alert("সব তথ্য পূরণ করুন");
+    return;
+  }
+
+  let choice = selectedRadio.value;
+  let list = JSON.parse(localStorage.getItem('accounts')) || [];
+
+  list.push({
+    name: name,
+    choice: choice,
+    motTk: 0,
+    innerList: []
+  });
+
+  localStorage.setItem('accounts', JSON.stringify(list));
+  loadData();
+
+  document.getElementById('name').value = '';
+  selectedRadio.checked = false;
+});
+
+loadData();
+</script>
+
+</body>
+</html>
