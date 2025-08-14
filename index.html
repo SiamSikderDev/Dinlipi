@@ -55,7 +55,7 @@
     padding: 15px;
     border-radius: 12px;
     background: #f0f0f0;
-    margin: 10px 0;
+    margin: 5px 0;
     position: relative;
   }
 
@@ -121,6 +121,15 @@
     height: 35px;
   }
 
+  .account {
+    display: flex;
+    align-items: center;
+  }
+
+  .des {
+    width: 60%;
+  }
+
   .btnClick {
     animation: btnAnimation 0.5s;
   }
@@ -147,6 +156,20 @@
     -webkit-backdrop-filter: blur(5px);
   }
 
+  #moveable {
+    position: absolute;
+    left: 188px;
+    transition: left 0.5s ease; /* smooth animation */
+  }
+
+  .moveBtn {
+    background: rgba(255, 0, 127, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    padding: 5px 10px 5px 10px;
+    border-radius: 5px;
+  }
+
 </style>
 </head>
 <body>
@@ -163,48 +186,43 @@
         </div>
     </main>
 
-    <div style="height: 50px;"></div>
+    <div style="height: 85px;"></div>
 
     <div id="main"></div>
 
-    <div style="height: 100px;"></div>
+    <div style="height: 110px;"></div>
 
-    <div class="glass" style="width: 100%; padding: 10px; position: fixed; z-index: 10; top:0; right: 0; display: flex; justify-content: center; align-items: center; border-bottom: 2px dotted #ff007f;">
-        <div class="redGlass" style="display: flex; gap:2px; padding: 10px; border-radius: 10px; width: 80%; border: 2px dotted #ff007f;">
-            <ion-icon style="color:#ff007f" name="search"></ion-icon>
-            <input id="qoute" style="background: transparent; margin: 0; padding: 0; width: 100%;" type="text" placeholder="Search...">
-        </div>
+    <div class="glass" style="width: 100%; padding: 10px; position: fixed; z-index: 10; top:0; right: 0; display: flex; gap: 10px; justify-content: center; align-items: center; border-bottom: 2px dotted #ff007f;">
+    <div class="redGlass" style="display: flex; gap:2px; padding: 10px; border-radius: 10px; width: 30%; border: 2px dotted #ff007f;">
+        <ion-icon style="color:#ff007f" name="search"></ion-icon>
+        <input id="qoute" style="background: transparent; margin: 0; padding: 0; width: 100%;" type="text" placeholder="Search...">
     </div>
+    <p class="navBtn moveBtn" style="cursor: pointer;" onclick="move(this)">সব</p>
+    <p class="navBtn" style="cursor: pointer;" onclick="move(this)">বাকি</p>
+    <p class="navBtn" style="cursor: pointer;" onclick="move(this)">ধার</p>
+    <p class="navBtn" style="cursor: pointer;" onclick="move(this)">প্রতিদিনের হিসাব</p>
+</div>
 
 <script>
-    document.body.addEventListener('click', (e) => {
-    if (e.target.tagName === 'BUTTON') {
-        e.target.classList.add('btnClick');
-        void e.target.offsetHeight; // reflow trick
-        e.target.addEventListener('animationend', () => {
-            e.target.classList.remove('btnClick');
-        }, { once: true });
-        }
-    });
+const navBtns = document.querySelectorAll('.navBtn');
 
+const move = (btn) => {
+  navBtns.forEach((navBtn) => navBtn.classList.remove('moveBtn'));
+  btn.classList.add('moveBtn');
+  loadData('', btn.innerHTML);
+};
 
-const main = document.getElementById('main');
-const addBtn = document.getElementById('addBtn');
-
-document.getElementById('qoute').addEventListener('input', function () {
-  loadData(this.value);
-});
-
-
-function loadData(searchText = '') {
+function loadData(searchText = '', navBtn = 'সব') {
   let list = JSON.parse(localStorage.getItem('accounts')) || [];
-
+  const main = document.getElementById('main');
   main.innerHTML = '';
 
   list.forEach((account, index) => {
-    if (searchText && !account.name.toLowerCase().includes(searchText.toLowerCase())) {
-      return; // এই আইটেম ম্যাচ না করলে স্কিপ করো
-    }
+    // search filter
+    if (searchText && !account.name.toLowerCase().includes(searchText.toLowerCase())) return;
+
+    // choice filter
+    if (navBtn !== 'সব' && navBtn !== account.choice) return;
 
     let box = document.createElement('div');
     box.classList.add('box');
@@ -238,118 +256,71 @@ function loadData(searchText = '') {
 
     main.appendChild(box);
 
-    // ভিতরের Add বোতামের কাজ
+    // inner add
     box.querySelector('.inner-add-btn').addEventListener('click', () => {
-    let innerDes = box.querySelector('.inner-des').value;
-    let innerTk = box.querySelector('.inner-tk').value;
-
-    if (!innerDes || !innerTk) {
-        alert("Description ও Amount দিন");
-        return;
-    }
-
-    // create inner item
-    let innerItem = {
-        id: generateUniqueId(),
-        innerDes: innerDes,
-        innerTk: '+' + innerTk
-    };
-
-    // push to the correct account
-    list[index].innerList.push(innerItem);
-
-    // update total
-    list[index].motTk += parseFloat(innerTk);
-
-    // save to localStorage
-    localStorage.setItem('accounts', JSON.stringify(list));
-
-    // clear input fields
-    box.querySelector('.inner-des').value = '';
-    box.querySelector('.inner-tk').value = '';
-
-    // reload
-    loadData();
+      let innerDes = box.querySelector('.inner-des').value;
+      let innerTk = parseFloat(box.querySelector('.inner-tk').value);
+      if (!innerDes || !innerTk) { alert("Description ও Amount দিন"); return; }
+      let innerItem = { id: generateUniqueId(), innerDes, innerTk: '+' + innerTk };
+      list[index].innerList.push(innerItem);
+      list[index].motTk = (parseFloat(list[index].motTk) || 0) + innerTk;
+      localStorage.setItem('accounts', JSON.stringify(list));
+      box.querySelector('.inner-des').value = '';
+      box.querySelector('.inner-tk').value = '';
+      loadData();
     });
 
+    // inner subtract
     box.querySelector('.inner-sub-btn').addEventListener('click', () => {
-    let innerDes = box.querySelector('.inner-des').value;
-    let innerTk = box.querySelector('.inner-tk').value;
-
-    if (!innerDes || !innerTk) {
-        alert("Description ও Amount দিন");
-        return;
-    }
-
-    // create inner item
-    let innerItem = {
-        id: generateUniqueId(),
-        innerDes: innerDes,
-        innerTk: '-' + innerTk
-    };
-
-    // push to the correct account
-    list[index].innerList.push(innerItem);
-
-    // update total
-    list[index].motTk -= parseFloat(innerTk);
-
-    // save to localStorage
-    localStorage.setItem('accounts', JSON.stringify(list));
-
-    // clear input fields
-    box.querySelector('.inner-des').value = '';
-    box.querySelector('.inner-tk').value = '';
-
-    // reload
-    loadData();
+      let innerDes = box.querySelector('.inner-des').value;
+      let innerTk = parseFloat(box.querySelector('.inner-tk').value);
+      if (!innerDes || !innerTk) { alert("Description ও Amount দিন"); return; }
+      let innerItem = { id: generateUniqueId(), innerDes, innerTk: '-' + innerTk };
+      list[index].innerList.push(innerItem);
+      list[index].motTk = (parseFloat(list[index].motTk) || 0) - innerTk;
+      localStorage.setItem('accounts', JSON.stringify(list));
+      box.querySelector('.inner-des').value = '';
+      box.querySelector('.inner-tk').value = '';
+      loadData();
     });
   });
 }
 
 const generateUniqueId = (length = 8) => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
-
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
+  return result;
+};
 
 function deleteItem(index) {
-    if (confirm('আপনি কি এই আইটেমটি মুছে ফেলতে চান?')) {
-        let list = JSON.parse(localStorage.getItem('accounts')) || [];
-        list.splice(index, 1);
-        localStorage.setItem('accounts', JSON.stringify(list));
-        loadData();
-    }
+  if (confirm('আপনি কি এই আইটেমটি মুছে ফেলতে চান?')) {
+    let list = JSON.parse(localStorage.getItem('accounts')) || [];
+    list.splice(index, 1);
+    localStorage.setItem('accounts', JSON.stringify(list));
+    loadData();
+  }
 }
 
+// Add main account
+const addBtn = document.getElementById('addBtn');
 addBtn.addEventListener('click', () => {
   const name = document.getElementById('name').value;
   const selectedRadio = document.querySelector('input[name="choice"]:checked');
+  if (!name || !selectedRadio) { alert("সব তথ্য পূরণ করুন"); return; }
 
-  if (!name || !selectedRadio) {
-    alert("সব তথ্য পূরণ করুন");
-    return;
-  }
-
-  let choice = selectedRadio.value;
   let list = JSON.parse(localStorage.getItem('accounts')) || [];
-
-  list.push({
-    name: name,
-    choice: choice,
-    motTk: 0,
-    innerList: []
-  });
-
+  list.push({ name, choice: selectedRadio.value, motTk: 0, innerList: [] });
   localStorage.setItem('accounts', JSON.stringify(list));
   loadData();
-
   document.getElementById('name').value = '';
   selectedRadio.checked = false;
+});
+
+// search input
+document.getElementById('qoute').addEventListener('input', function () {
+  const activeBtn = document.querySelector('.navBtn.moveBtn');
+  loadData(this.value, activeBtn ? activeBtn.innerHTML : 'সব');
 });
 
 loadData();
